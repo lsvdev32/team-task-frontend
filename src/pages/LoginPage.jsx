@@ -1,4 +1,23 @@
+import { useState } from "react";
+
 function LoginPage() {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (event) => {
+    setForm({
+      ...form,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log("Login pendiente de integrar:", form);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-md">
@@ -7,13 +26,16 @@ function LoginPage() {
           Accede a la aplicación Team Task
         </p>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Correo electrónico
             </label>
             <input
               type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
               placeholder="correo@ejemplo.com"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
             />
@@ -25,6 +47,9 @@ function LoginPage() {
             </label>
             <input
               type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
               placeholder="********"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
             />
