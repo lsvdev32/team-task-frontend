@@ -1,10 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginRequest } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (event) => {
     setForm({
@@ -13,9 +22,35 @@ function LoginPage() {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("Login pendiente de integrar:", form);
+    setErrorMessage("");
+
+    if (!form.email || !form.password) {
+      setErrorMessage("Debes completar el correo y la contraseña.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const data = await loginRequest(form);
+
+      if (!data.token) {
+        setErrorMessage("Token no recibido del servidor.");
+        return;
+      }
+
+      login(data.token);
+      navigate("/tasks");
+    } catch (error) {
+      const backendMessage =
+        error.response?.data?.message || "No fue posible iniciar sesión.";
+
+      setErrorMessage(backendMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,11 +90,18 @@ function LoginPage() {
             />
           </div>
 
+          {errorMessage && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
+
           <button
             type="submit"
-            className="w-full rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-slate-700"
+            disabled={isLoading}
+            className="w-full rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Ingresar
+            {isLoading ? "Ingresando..." : "Ingresar"}
           </button>
         </form>
       </div>
