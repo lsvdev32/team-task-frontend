@@ -1,6 +1,13 @@
 import api from "./api";
 
-export const getTasks = async (params = {}) => {
+export const getTasks = async (filters = {}) => {
+  const params = {};
+
+  if (filters.status) params.status = filters.status;
+  if (filters.priority) params.priority = filters.priority;
+  if (filters.userId) params.userId = filters.userId;
+  if (filters.search) params.search = filters.search;
+
   const response = await api.get("/tasks", { params });
   return response.data;
 };
