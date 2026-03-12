@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AppLayout from "../components/layout/AppLayout";
+import Modal from "../components/ui/Modal";
 import UserForm from "../components/users/UserForm";
 import UsersTable from "../components/users/UsersTable";
 import {
@@ -15,12 +16,12 @@ function UsersPage() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadUsers = async () => {
     try {
       setIsLoadingUsers(true);
       setErrorMessage("");
-
       const data = await getUsers();
       setUsers(data);
     } catch (error) {
@@ -36,6 +37,23 @@ function UsersPage() {
     loadUsers();
   }, []);
 
+  const handleOpenCreate = () => {
+    setSelectedUser(null);
+    setErrorMessage("");
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setErrorMessage("");
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedUser(null);
+    setIsModalOpen(false);
+  };
+
   const handleCreateOrUpdate = async (formData) => {
     try {
       setIsSubmitting(true);
@@ -47,7 +65,7 @@ function UsersPage() {
         await createUser(formData);
       }
 
-      setSelectedUser(null);
+      handleCloseModal();
       await loadUsers();
     } catch (error) {
       const backendMessage =
@@ -58,16 +76,6 @@ function UsersPage() {
     }
   };
 
-  const handleEdit = (user) => {
-    setSelectedUser(user);
-    setErrorMessage("");
-  };
-
-  const handleCancelEdit = () => {
-    setSelectedUser(null);
-    setErrorMessage("");
-  };
-
   const handleDelete = async (id) => {
     const confirmed = window.confirm("¿Seguro que deseas eliminar este usuario?");
     if (!confirmed) return;
@@ -75,11 +83,6 @@ function UsersPage() {
     try {
       setErrorMessage("");
       await deleteUser(id);
-
-      if (selectedUser?.id === id) {
-        setSelectedUser(null);
-      }
-
       await loadUsers();
     } catch (error) {
       const backendMessage =
@@ -89,25 +92,21 @@ function UsersPage() {
   };
 
   return (
-    <AppLayout title="Usuarios">
-      <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <h2 className="mb-4 text-xl font-semibold text-slate-800">
-            {selectedUser ? "Editar usuario" : "Crear usuario"}
-          </h2>
-
-          <UserForm
-            onSubmit={handleCreateOrUpdate}
-            initialValues={selectedUser}
-            isEditing={!!selectedUser}
-            onCancel={handleCancelEdit}
-            isLoading={isSubmitting}
-          />
-        </section>
-
+    <>
+      <AppLayout
+        title="Gestión de usuarios"
+        actions={
+          <button
+            onClick={handleOpenCreate}
+            className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-700 sm:w-auto"
+          >
+            Crear usuario
+          </button>
+        }
+      >
         <section className="space-y-4">
           <div>
-            <h2 className="text-xl font-semibold text-slate-800">
+            <h2 className="text-lg font-semibold text-slate-800 sm:text-xl">
               Lista de usuarios
             </h2>
             <p className="text-sm text-slate-500">
@@ -133,8 +132,22 @@ function UsersPage() {
             />
           )}
         </section>
-      </div>
-    </AppLayout>
+      </AppLayout>
+
+      <Modal
+        isOpen={isModalOpen}
+        title={selectedUser ? "Editar usuario" : "Crear usuario"}
+        onClose={handleCloseModal}
+      >
+        <UserForm
+          onSubmit={handleCreateOrUpdate}
+          initialValues={selectedUser}
+          isEditing={!!selectedUser}
+          onCancel={handleCloseModal}
+          isLoading={isSubmitting}
+        />
+      </Modal>
+    </>
   );
 }
 

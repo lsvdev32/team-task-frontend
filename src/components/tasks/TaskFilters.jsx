@@ -1,7 +1,7 @@
 function TaskFilters({ filters, users, onChange, onReset }) {
   return (
-    <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 xl:grid-cols-5">
-      <div>
+    <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="sm:col-span-2 xl:col-span-1">
         <label className="mb-1 block text-sm font-medium text-slate-700">
           Buscar
         </label>
@@ -68,7 +68,7 @@ function TaskFilters({ filters, users, onChange, onReset }) {
         </select>
       </div>
 
-      <div className="flex items-end">
+      <div className="sm:col-span-2 xl:col-span-1 xl:flex xl:items-end">
         <button
           type="button"
           onClick={onReset}

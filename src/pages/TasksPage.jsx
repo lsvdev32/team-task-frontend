@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AppLayout from "../components/layout/AppLayout";
+import Modal from "../components/ui/Modal";
 import TaskFilters from "../components/tasks/TaskFilters";
 import TaskForm from "../components/tasks/TaskForm";
 import TasksTable from "../components/tasks/TasksTable";
@@ -27,6 +28,7 @@ function TasksPage() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadUsers = async () => {
     try {
@@ -46,7 +48,6 @@ function TasksPage() {
     try {
       setIsLoadingTasks(true);
       setErrorMessage("");
-
       const data = await getTasks(customFilters);
       setTasks(data);
     } catch (error) {
@@ -77,6 +78,23 @@ function TasksPage() {
     setFilters(initialFilters);
   };
 
+  const handleOpenCreate = () => {
+    setSelectedTask(null);
+    setErrorMessage("");
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (task) => {
+    setSelectedTask(task);
+    setErrorMessage("");
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTask(null);
+    setIsModalOpen(false);
+  };
+
   const handleCreateOrUpdate = async (formData) => {
     try {
       setIsSubmitting(true);
@@ -88,7 +106,7 @@ function TasksPage() {
         await createTask(formData);
       }
 
-      setSelectedTask(null);
+      handleCloseModal();
       await loadTasks();
     } catch (error) {
       const backendMessage =
@@ -99,16 +117,6 @@ function TasksPage() {
     }
   };
 
-  const handleEdit = (task) => {
-    setSelectedTask(task);
-    setErrorMessage("");
-  };
-
-  const handleCancelEdit = () => {
-    setSelectedTask(null);
-    setErrorMessage("");
-  };
-
   const handleDelete = async (id) => {
     const confirmed = window.confirm("¿Seguro que deseas eliminar esta tarea?");
     if (!confirmed) return;
@@ -116,11 +124,6 @@ function TasksPage() {
     try {
       setErrorMessage("");
       await deleteTask(id);
-
-      if (selectedTask?.id === id) {
-        setSelectedTask(null);
-      }
-
       await loadTasks();
     } catch (error) {
       const backendMessage =
@@ -130,48 +133,39 @@ function TasksPage() {
   };
 
   return (
-    <AppLayout title="Tareas">
-      <div className="space-y-6">
-        <TaskFilters
-          filters={filters}
-          users={users}
-          onChange={handleFilterChange}
-          onReset={handleResetFilters}
-        />
+    <>
+      <AppLayout
+        title="Gestión de tareas"
+        actions={
+          <button
+            onClick={handleOpenCreate}
+            className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-700 sm:w-auto"
+          >
+            Crear tarea
+          </button>
+        }
+      >
+        <div className="space-y-6">
+          <TaskFilters
+            filters={filters}
+            users={users}
+            onChange={handleFilterChange}
+            onReset={handleResetFilters}
+          />
 
-        {errorMessage && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessage}
-          </div>
-        )}
-
-        <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <h2 className="mb-4 text-xl font-semibold text-slate-800">
-              {selectedTask ? "Editar tarea" : "Crear tarea"}
-            </h2>
-
-            {isLoadingUsers ? (
-              <p className="text-sm text-slate-500">Cargando usuarios...</p>
-            ) : (
-              <TaskForm
-                onSubmit={handleCreateOrUpdate}
-                initialValues={selectedTask}
-                users={users}
-                isEditing={!!selectedTask}
-                onCancel={handleCancelEdit}
-                isLoading={isSubmitting}
-              />
-            )}
-          </section>
+          {errorMessage && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
 
           <section className="space-y-4">
             <div>
-              <h2 className="text-xl font-semibold text-slate-800">
+              <h2 className="text-lg font-semibold text-slate-800 sm:text-xl">
                 Lista de tareas
               </h2>
               <p className="text-sm text-slate-500">
-                Gestiona tareas, filtros y búsqueda en tiempo real.
+                Gestiona tareas, filtros y búsqueda.
               </p>
             </div>
 
@@ -188,8 +182,27 @@ function TasksPage() {
             )}
           </section>
         </div>
-      </div>
-    </AppLayout>
+      </AppLayout>
+
+      <Modal
+        isOpen={isModalOpen}
+        title={selectedTask ? "Editar tarea" : "Crear tarea"}
+        onClose={handleCloseModal}
+      >
+        {isLoadingUsers ? (
+          <p className="text-sm text-slate-500">Cargando usuarios...</p>
+        ) : (
+          <TaskForm
+            onSubmit={handleCreateOrUpdate}
+            initialValues={selectedTask}
+            users={users}
+            isEditing={!!selectedTask}
+            onCancel={handleCloseModal}
+            isLoading={isSubmitting}
+          />
+        )}
+      </Modal>
+    </>
   );
 }
 
